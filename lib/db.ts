@@ -66,7 +66,9 @@ const SCHEMA = `
 const g = globalThis as unknown as { __drv?: Promise<Driver> };
 
 async function init(): Promise<Driver> {
-  const url = process.env.DATABASE_URL;
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!url && process.env.NODE_ENV === "production" && process.env.VERCEL)
+    throw new Error("DATABASE_URL is not set. Add a Postgres database (Vercel Storage -> Neon) and redeploy.");
   const d = url ? pgDriver(url) : await pgliteDriver();
   await d.exec(SCHEMA);
   await seed(d.q);
